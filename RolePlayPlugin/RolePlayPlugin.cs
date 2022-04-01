@@ -11,7 +11,7 @@ namespace RolePlayPlugin
 {
     public class RolePlayPlugin : IAssettoServerPlugin<RolePlayConfiguration>
     {
-        private RolePlayConfiguration _config;
+        private RolePlayConfiguration? _config;
 
         public void Initialize(ACServer server)
         {
