@@ -8,5 +8,7 @@ namespace RolePlayPlugin
 {
     public class RolePlayConfiguration
     {
+        public string? DbConnectionString { get; set; }
+        
     }
 }
