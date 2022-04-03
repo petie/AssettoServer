@@ -9,6 +9,10 @@ namespace RolePlayPlugin
     public class RolePlayConfiguration
     {
         public string? DbConnectionString { get; set; }
+
+        public List<CarOffer>? CarOffers { get; set; }
+
+        public int MaxAvailableJobs { get; set; }
         
     }
 }

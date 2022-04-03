@@ -11,11 +11,11 @@ namespace RolePlayPlugin
     public class RolePlayCommandModule : ACModuleBase
     {
         BankRepository br;
-        JobsRepository jr;
+        //JobsRepository jr;
         public RolePlayCommandModule()
         {
             br = new BankRepository();
-            jr = new JobsRepository();
+            //jr = new JobsRepository();
         }
 
         [Command("balance")]
@@ -42,7 +42,31 @@ namespace RolePlayPlugin
 
         [Command("jobs")]
         public async Task GetJobs() {
-            List<JobOffer> result = await jr.GetJobsList();
+            List<JobOffer> result = await RolePlayPlugin.JobManager.GetJobsList();
+            foreach (JobOffer offer in result)
+            {
+                Reply(offer.ToString());
+            }
+        }
+
+        [Command("startJob")]
+        public async Task StartJob(string number)
+        {
+            bool result = await RolePlayPlugin.JobManager.StartJob(Context.Client.EntryCar, number);
+            if (result)
+            {
+                Reply("Job started. GO!");
+            }
+            else
+            {
+                Reply("Job not assigned");
+            }
+        }
+
+        [Command("deliver")]
+        public async Task Deliver()
+        {
+            await RolePlayPlugin.JobManager?.EndJob(Context.Client.EntryCar);
         }
     }
 }
