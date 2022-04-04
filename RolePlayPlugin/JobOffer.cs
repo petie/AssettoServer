@@ -5,45 +5,53 @@ namespace RolePlayPlugin
 {
     public class JobOffer {
 
-        public JobOffer(Vector3 start, Vector3 end, CargoType cargoType)
+        public JobOffer(int jobCount, JobDestination start, JobDestination finish, CargoType cargoType)
         {
+            Id = jobCount;
             Start = start;
-            Destination = end;
+            Finish = finish;
             Cargo = cargoType;
+            Distance = Vector3.Distance(start.Position, finish.Position);
+            StartPrize = (int)Math.Floor((int)Cargo * 10000 * Math.Floor(Distance/1000));
         }
 
-        public string Id { get; set; }
-        public int StartPrize { get; set; }
-        public Vector3 Destination { get; set; }
-        public string DestinationName { get; set; }
-        public CargoType Cargo { get; set; }
-        public EntryCar UserInProgress { get; set; }
-        public int CargoDamage { get; set; }
+        public int Id { get; private set; }
+        public int StartPrize { get; private set; }
 
-        public Vector3 Start { get; set; }
+        public JobDestination Start { get; private set; }
+        public JobDestination Finish { get; private set; }
+        public float Distance { get; private set; }
+        public CargoType Cargo { get; private set; }
+        public EntryCar UserInProgress { get; private set; }
+        public int CargoDamage { get; private set; }
 
-        public bool IsFinished { get; set; }
+        public bool IsFinished { get; private set; }
 
-        public int Prize { get
+        public int CurrentPrize { get
             {
                 return (StartPrize - CargoDamage) / StartPrize;
             } }
 
         public override string ToString()
         {
-            return $"{Id}: ¥{StartPrize} {DestinationName} {Cargo}";
+            return $"{Id}: {StartPrize} {Start.Name} => {Finish.Name} {Cargo}";
         }
 
         public int OnCollision(float speed)
         {
             CargoDamage += (int)Math.Ceiling(speed);
-            return Prize;
+            return CurrentPrize;
         }
 
-        internal int Finish()
+        internal int Complete()
         {
             bool IsFinished = true;
-            return Prize;
+            return CurrentPrize;
+        }
+
+        internal void StartJob(EntryCar entryCar)
+        {
+            UserInProgress = entryCar;
         }
     }
 

@@ -19,10 +19,11 @@ namespace RolePlayPlugin
 
         public void Initialize(ACServer server)
         {
+            Log.Debug(_config.ToString());
             JobManager = new JobManager(server, _config);
             BankManager = new BankManager(server, _config);
-            CarManager = new CarManager(server, _config);
-            Log.Debug("Role Play Plugin Initialized!"); 
+            //CarManager = new CarManager(server, _config);
+            Log.Information("Role Play Plugin Initialized!"); 
         }
 
         public void SetConfiguration(RolePlayConfiguration configuration)

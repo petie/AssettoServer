@@ -18,6 +18,7 @@ namespace RolePlayPlugin
 
         public JobManager(ACServer server, RolePlayConfiguration configuration)
         {
+            this.availableJobs = new List<JobOffer>();
             this.server = server;
             this.server.ClientCollision += OnClientCollision;
             this.configuration = configuration;
@@ -33,7 +34,7 @@ namespace RolePlayPlugin
         {
             while (availableJobs.Count < configuration.MaxAvailableJobs)
             {
-                availableJobs.Add(JobGenerator.GenerateJob());
+                availableJobs.Add(JobGenerator.GenerateJob(configuration.JobDestinations));
             }
         }
 
@@ -51,10 +52,10 @@ namespace RolePlayPlugin
         {
             if (_jobs.TryGetValue(car, out var job) && job != null)
             {
-                var distance = Vector3.Distance(job.Destination, car.Status.Position);
+                var distance = Vector3.Distance(job.Finish.Position, car.Status.Position);
                 if (distance <= 5)
                 {
-                    var prize = job.Finish();
+                    var prize = job.Complete();
                     bool bankSucceded = await RolePlayPlugin.BankManager.AddBalance(car, prize);
                     if (bankSucceded)
                         return prize;
@@ -67,12 +68,12 @@ namespace RolePlayPlugin
         {
             if (_jobs.TryGetValue(entryCar, out var job) && job == null)
             {
-                JobOffer? offer = availableJobs.FirstOrDefault(j => j.Id == number);
+                JobOffer? offer = availableJobs.FirstOrDefault(j => j.Id.ToString() == number);
                 if (offer != null) 
                 {
                     availableJobs.Remove(offer);
                     _jobs[entryCar] = offer;
-                    offer.UserInProgress = entryCar;
+                    offer.StartJob(entryCar);
                     return Task.FromResult(true);
                 }
             }
