@@ -9,6 +9,7 @@ EnablePlugins:
 ---
 !RolePlayConfiguration
 MaxAvailableJobs: 40
+JobDistance: 10
 JobDestinations:
   - 
     Name: "Tatsumi PA"

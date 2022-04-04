@@ -10,11 +10,11 @@ namespace RolePlayPlugin
     {
         public string? DbConnectionString { get; set; }
 
-        //public List<CarOffer>? CarOffers { get; set; }
-
         public int MaxAvailableJobs { get; set; }
 
         public List<JobDestination>? JobDestinations { get; set; }
+
+        public int JobDistance { get; set; }
 
         public override string ToString()
         {
