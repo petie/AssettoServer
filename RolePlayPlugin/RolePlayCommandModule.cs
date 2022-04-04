@@ -15,7 +15,6 @@ namespace RolePlayPlugin
         public RolePlayCommandModule()
         {
             br = new BankRepository();
-            //jr = new JobsRepository();
         }
 
         [Command("balance")]
@@ -66,7 +65,14 @@ namespace RolePlayPlugin
         [Command("deliver")]
         public async Task Deliver()
         {
-            await RolePlayPlugin.JobManager?.EndJob(Context.Client.EntryCar);
+            int? result = await RolePlayPlugin.JobManager?.EndJob(Context.Client.EntryCar) ?? null;
+            if (result != null)
+            {
+                Reply($"Job Succeded! ¥{result} has been deposited to your account.");
+            } else
+            {
+                Reply($"Error, job could not be delivered");
+            }
         }
     }
 }
