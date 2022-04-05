@@ -20,16 +20,25 @@ namespace RolePlayPlugin
 
         public JobDestination Start { get; private set; }
         public JobDestination Finish { get; private set; }
+
+        public long JobStartTime { get; private set; }
+        public long JobFinishTime { get; private set; }
+
+        public bool IsFinished { get; set; }
+
         public float Distance { get; private set; }
         public CargoType Cargo { get; private set; }
         public EntryCar UserInProgress { get; private set; }
         public int CargoDamage { get; private set; }
 
-        public bool IsFinished { get; private set; }
-
         public int CurrentPrize { get
             {
-                return (StartPrize - CargoDamage) / StartPrize;
+                return (StartPrize - CargoDamage);
+            } }
+
+        public int CurrentDamagePercent { get
+            {
+                return 100 - ((StartPrize - CargoDamage) * 100 / StartPrize);
             } }
 
         public override string ToString()
@@ -39,19 +48,22 @@ namespace RolePlayPlugin
 
         public int OnCollision(float speed)
         {
-            CargoDamage += (int)Math.Ceiling(speed);
-            return CurrentPrize;
+            CargoDamage += (int)Math.Ceiling(speed * 100);
+            if (CargoDamage > StartPrize) CargoDamage = StartPrize;
+            return CurrentDamagePercent;
         }
 
-        internal int Complete()
+        internal int Complete(long finishTime)
         {
-            bool IsFinished = true;
+            IsFinished = true;
+            JobFinishTime = finishTime;
             return CurrentPrize;
         }
 
-        internal void StartJob(EntryCar entryCar)
+        internal void StartJob(EntryCar entryCar, long startTime)
         {
             UserInProgress = entryCar;
+            JobStartTime = startTime;
         }
     }
 

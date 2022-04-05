@@ -6,7 +6,7 @@ EnablePlugins:
 ```
 
 ```yaml
----
+---the 
 !RolePlayConfiguration
 MaxAvailableJobs: 40
 JobDistance: 10

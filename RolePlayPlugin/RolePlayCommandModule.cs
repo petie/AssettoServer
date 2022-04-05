@@ -80,13 +80,27 @@ namespace RolePlayPlugin
         [Command("deliver")]
         public async Task Deliver()
         {
-            int? result = await RolePlayPlugin.JobManager?.EndJob(Context.Client.EntryCar) ?? null;
+            var result = await RolePlayPlugin.JobManager?.EndJob(Context.Client.EntryCar) ?? null;
             if (result != null)
             {
-                Reply($"Job Succeded! ¥{result} has been deposited to your account.");
+                Reply(result.ToString());
             } else
             {
-                Reply($"Error, job could not be delivered");
+                Reply($"Error unknown");
+            }
+        }
+
+        [Command("times")]
+        public async Task GetTimes()
+        {
+            var result = RolePlayPlugin.LeaderboardsManager?.GetForLocation(Context.Client.EntryCar);
+            if (result == null)
+            {
+                Reply("Too far away from destination!");
+            }
+            else
+            {
+                Reply(result.Convert());
             }
         }
     }

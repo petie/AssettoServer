@@ -14,6 +14,7 @@ namespace RolePlayPlugin
         internal static JobManager JobManager { get; private set; }
         internal static CarManager CarManager { get; private set; }
         internal static BankManager BankManager { get; private set; }
+        internal static LeaderboardsManager LeaderboardsManager { get; private set; }
         private RolePlayConfiguration? _config;
         Dictionary<EntryCar, JobOffer?> _jobs;
 
@@ -22,7 +23,7 @@ namespace RolePlayPlugin
             Log.Debug(_config.ToString());
             JobManager = new JobManager(server, _config);
             BankManager = new BankManager(server, _config);
-            //CarManager = new CarManager(server, _config);
+            LeaderboardsManager = new LeaderboardsManager(server, _config);
             Log.Information("Role Play Plugin Initialized!"); 
         }
 

@@ -83,29 +83,46 @@ namespace RolePlayPlugin
         {
             if (_jobs.TryGetValue(sender.EntryCar, out var carJob) && carJob != null)
             {
+                Log.Debug(args.Speed.ToString());
                 var damage = carJob.OnCollision(args.Speed);
-                sender.SendPacket(new ChatMessage { SessionId = 255, Message = $"Cargo damaged: {damage}" });
+                sender.SendPacket(new ChatMessage { SessionId = 255, Message = $"Cargo damaged: {damage}% damage" });
 
             }
         }
 
-        internal async Task<int?> EndJob(EntryCar car)
+        internal async Task<JobDeliveryResult> EndJob(EntryCar car)
         {
             if (_jobs.TryGetValue(car, out var job) && job != null)
             {
                 var distance = Vector3.Distance(job.Finish.Position, car.Status.Position);
                 if (distance <= configuration.JobDistance)
                 {
-                    var prize = job.Complete();
+                    var result = new JobDeliveryResult();
+                    var prize = job.Complete(server.CurrentTime64);
+                    var isFastest = RolePlayPlugin.LeaderboardsManager.StoreResult(job);
+                    if (isFastest)
+                    {
+                        var modification = (int)Math.Floor(prize * 0.1f);
+                        result.AddMod(modification, Constants.FASTEST_BONUS);
+                        prize += modification;
+                        result.FinalPrize = prize;
+                        result.BasePrize = job.StartPrize;
+                        result.AddMod(-(job.StartPrize - job.CurrentPrize), Constants.CARGO_DAMAGE);
+                        result.TotalTime = job.JobFinishTime - job.JobStartTime;
+                    }
                     bool bankSucceded = await RolePlayPlugin.BankManager.AddBalance(car, prize);
                     if (bankSucceded)
-                        return prize;
+                        return result;
+                }
+                else
+                {
+                    return JobDeliveryResult.TooFarAwayFromDestination();
                 }
             }
-            return null;
+            return JobDeliveryResult.NoActiveJob();
         }
 
-        private JobDestination? GetClosestDestination(EntryCar car)
+        public JobDestination? GetClosestDestination(EntryCar car)
         {
             JobDestination? current = null;
             foreach (JobDestination destination in configuration.JobDestinations)
@@ -133,7 +150,7 @@ namespace RolePlayPlugin
                     {
                         offers.Remove(offer);
                         _jobs[entryCar] = offer;
-                        offer.StartJob(entryCar);
+                        offer.StartJob(entryCar, server.CurrentTime64);
                         GenerateJobs();
                         return Task.FromResult(true);
                     }
