@@ -24,7 +24,8 @@ namespace RolePlayPlugin
             JobManager = new JobManager(server, _config);
             BankManager = new BankManager(server, _config);
             LeaderboardsManager = new LeaderboardsManager(server, _config);
-            Log.Information("Role Play Plugin Initialized!"); 
+            Log.Information("Role Play Plugin Initialized!");
+            server.CSPLuaClientScriptProvider.AddLuaClientScript(LuaManager.GetClientScript(_config));
         }
 
         public void SetConfiguration(RolePlayConfiguration configuration)
