@@ -65,6 +65,7 @@ namespace AssettoServer.Server
         internal ConcurrentDictionary<int, EntryCar> ConnectedCars { get; }
         internal ConcurrentDictionary<Address, EntryCar> EndpointCars { get; }
         public EntryCar[] EntryCars { get; }
+        public EntryCar[] SelectionCars { get; }
         internal GuidListFile Admins { get; }
         internal GuidListFile Blacklist { get; }
         [NotNull] internal ImmutableDictionary<string, byte[]>? TrackChecksums { get; private set; }
@@ -287,6 +288,7 @@ namespace AssettoServer.Server
             }
             
             EntryCars = new EntryCar[Math.Min(Configuration.Server.MaxClients, Configuration.EntryList.Cars.Count)];
+            SelectionCars = new EntryCar[Math.Min(Configuration.Server.MaxClients, Configuration.EntryList.Cars.Count)];
             Log.Information("Loaded {Count} cars", EntryCars.Length);
             for (int i = 0; i < EntryCars.Length; i++)
             {
@@ -299,6 +301,19 @@ namespace AssettoServer.Server
                     SpectatorMode = entry.SpectatorMode,
                     Ballast = entry.Ballast,
                     Restrictor = entry.Restrictor,
+                    DriverOptionsFlags = driverOptions,
+                    AiMode = aiMode,
+                    AiEnableColorChanges = driverOptions.HasFlag(DriverOptionsFlags.AllowColorChange),
+                    AiControlled = aiMode != AiMode.None,
+                    NetworkDistanceSquared = MathF.Pow(Configuration.Extra.NetworkBubbleDistance, 2),
+                    OutsideNetworkBubbleUpdateRateMs = 1000 / Configuration.Extra.OutsideNetworkBubbleRefreshRateHz
+                };
+
+                SelectionCars[i] = new EntryCar(entry.Model, entry.Skin, this, (byte)i)
+                {
+                    SpectatorMode = 0,
+                    Ballast = 0,
+                    Restrictor = 0,
                     DriverOptionsFlags = driverOptions,
                     AiMode = aiMode,
                     AiEnableColorChanges = driverOptions.HasFlag(DriverOptionsFlags.AllowColorChange),
@@ -623,9 +638,11 @@ namespace AssettoServer.Server
                     
                     if (entryCar.AiMode != AiMode.Fixed 
                         && (isAdmin || Configuration.Extra.AiParams.MaxPlayerCount == 0 || ConnectedCars.Count < Configuration.Extra.AiParams.MaxPlayerCount) 
-                        && entryCar.Client == null && handshakeRequest.RequestedCar == entryCar.Model)
+                        && entryCar.Client == null)
                     {
                         entryCar.Reset();
+                        entryCar.Model = "ks_mazda_miata";
+                        entryCar.Skin = "00_classic_red";
                         entryCar.Client = client;
                         client.EntryCar = entryCar;
                         client.SessionId = entryCar.SessionId;

@@ -312,8 +312,8 @@ namespace AssettoServer.Network.Tcp
                                 AllowedTyresOutCount = cfg.AllowedTyresOutCount,
                                 AllowTyreBlankets = cfg.AllowTyreBlankets,
                                 AutoClutchAllowed = cfg.AutoClutchAllowed,
-                                CarModel = EntryCar.Model,
-                                CarSkin = EntryCar.Skin,
+                                CarModel = "ks_mazda_miata",
+                                CarSkin = "00_classic_red",
                                 FuelConsumptionRate = cfg.FuelConsumptionRate,
                                 HasExtraLap = cfg.HasExtraLap,
                                 InvertedGridPositions = cfg.InvertedGridPositions,
@@ -564,8 +564,12 @@ namespace AssettoServer.Network.Tcp
         private void OnCarListRequest(PacketReader reader)
         {
             CarListRequest carListRequest = reader.ReadPacket<CarListRequest>();
+            Logger.Debug($"Received CarListRequest: {carListRequest.PageIndex} page");
 
-            List<EntryCar> carsInPage = Server.EntryCars.Skip(carListRequest.PageIndex).Take(10).ToList();
+            List<EntryCar> carsInPage = Server.SelectionCars.Skip(carListRequest.PageIndex).Take(10).ToList();
+            foreach (EntryCar car in carsInPage) {
+                Logger.Debug($"{car.SessionId} {car.Model}");
+            }
             CarListResponse carListResponse = new CarListResponse()
             {
                 PageIndex = carListRequest.PageIndex,

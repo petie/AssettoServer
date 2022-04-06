@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -104,7 +105,7 @@ namespace AssettoServer.Network.Http
 
             DetailResponse responseObj = new DetailResponse()
             {
-                Cars = _server.EntryCars.Select(c => c.Model).Distinct(),
+                Cars = _server.SelectionCars.Select(c => c.Model).Distinct(),
                 Clients = _server.ConnectedCars.Count,
                 Country = new string[] { _server.GeoParams.Country, _server.GeoParams.CountryCode },
                 CPort = _server.Configuration.Server.HttpPort,
@@ -128,18 +129,7 @@ namespace AssettoServer.Network.Http
                 Track = _server.Configuration.Server.Track + (string.IsNullOrEmpty(_server.Configuration.Server.TrackConfig) ? null : "-" + _server.Configuration.Server.TrackConfig),
                 Players = new DetailResponsePlayerList
                 {
-                    Cars = _server.EntryCars.Select(ec => new DetailResponseCar
-                    {
-                        Model = ec.Model,
-                        Skin = ec.Skin,
-                        IsEntryList = ec.AiMode != AiMode.Fixed && (isAdmin || _server.Configuration.Extra.AiParams.MaxPlayerCount == 0 ||
-                                                                    _server.ConnectedCars.Count < _server.Configuration.Extra.AiParams.MaxPlayerCount),
-                        DriverName = ec.Client?.Name,
-                        DriverTeam = ec.Client?.Team,
-                        DriverNation = ec.Client?.NationCode,
-                        IsConnected = ec.Client != null,
-                        ID = IdFromGuid(ec.Client?.Guid)
-                    }).ToList(),
+                    Cars = GetCarsInfo(isAdmin)
                 },
                 Until = DateTimeOffset.Now.ToUnixTimeSeconds() + _server.CurrentSession.TimeLeftTicks / 1000,
                 Content = _server.Configuration.ContentConfiguration,
@@ -172,6 +162,34 @@ namespace AssettoServer.Network.Http
             };
             
             return responseObj;
+        }
+
+        private IEnumerable<DetailResponseCar> GetCarsInfo(bool isAdmin)
+        {
+            var result = _server.EntryCars.Select(ec => new DetailResponseCar
+            {
+                Model = ec.Model,
+                Skin = ec.Skin,
+                IsEntryList = ec.AiMode != AiMode.Fixed && (isAdmin || _server.Configuration.Extra.AiParams.MaxPlayerCount == 0 ||
+                                                                    _server.ConnectedCars.Count < _server.Configuration.Extra.AiParams.MaxPlayerCount),
+                DriverName = ec.Client?.Name,
+                DriverTeam = ec.Client?.Team,
+                DriverNation = ec.Client?.NationCode,
+                IsConnected = ec.Client != null,
+                ID = IdFromGuid(ec.Client?.Guid)
+            }).ToList();
+            result.AddRange(_server.SelectionCars.Select(ec => new DetailResponseCar
+            {
+                Model = ec.Model,
+                Skin = ec.Skin,
+                IsEntryList = true,
+                DriverName = null,
+                DriverTeam = null,
+                DriverNation = null,
+                IsConnected = false,
+                ID = null
+            }).ToList());
+            return result;
         }
 
         [HttpGet("/api/scripts/{scriptId:int}")]

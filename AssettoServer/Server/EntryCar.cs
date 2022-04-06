@@ -48,8 +48,8 @@ namespace AssettoServer.Server
         public DriverOptionsFlags DriverOptionsFlags { get; internal set; }
 
         public bool IsSpectator { get; internal set; }
-        public string Model { get; }
-        public string Skin { get; }
+        public string Model { get; set; }
+        public string Skin { get; set; }
         public int SpectatorMode { get; internal set; }
         public int Ballast { get; internal set; }
         public int Restrictor { get; internal set; }

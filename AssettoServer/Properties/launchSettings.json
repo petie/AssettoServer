@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AssettoServer": {
+      "commandName": "Project",
+      "commandLineArgs": "-c \"D:\\SteamLibrary\\SteamApps\\common\\assettocorsa\\server\\presets\\SERVER_01\\server_cfg.ini\" -e \"D:\\SteamLibrary\\SteamApps\\common\\assettocorsa\\server\\presets\\SERVER_01\\entry_list.ini\"",
+      "workingDirectory": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\server"
+    }
+  }
+}

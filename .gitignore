@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /cpPlugin.bat
+/cpServer.bat
+/ps.txt
+/out-win-x64/win-x64
