@@ -103,5 +103,10 @@ namespace RolePlayPlugin
                 Reply(result.Convert());
             }
         }
+
+        [Command("miata")]
+        public async Task Miata()
+        {
+        }
     }
 }
