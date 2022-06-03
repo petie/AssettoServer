@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using AssettoServer.Server.Plugin;
 using AssettoServer.Utils;
+using Autofac;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -17,12 +18,14 @@ public class ACServerConfiguration
     public IReadOnlyList<SessionConfiguration> Sessions { get; }
     public string FullTrackName { get; }
     public string WelcomeMessage { get; } = "";
-    public ACExtraConfiguration Extra { get; }
-    public CMContentConfiguration? ContentConfiguration { get; }
+    public ACExtraConfiguration Extra { get; private set; } = new();
+    public CMContentConfiguration? ContentConfiguration { get; private set; }
     public string ServerVersion { get; }
     public string? CSPExtraOptions { get; }
 
     public event EventHandler<ACServerConfiguration, EventArgs>? Reload;
+
+    private readonly string _configBaseFolder;
 
     /*
      * Search paths are like this:
@@ -38,81 +41,31 @@ public class ACServerConfiguration
      *
      * When "entryListPath" is set, it takes precedence and entry_list.ini will be loaded from the specified path.
      */
-    public ACServerConfiguration(string preset, string serverCfgPath, string entryListPath, ACPluginLoader loader)
+    public ACServerConfiguration(string preset, string serverCfgPath, string entryListPath)
     {
-        string configBaseFolder = string.IsNullOrEmpty(preset) ? "cfg" : Path.Join("presets", preset);
-            
+        _configBaseFolder = string.IsNullOrEmpty(preset) ? "cfg" : Path.Join("presets", preset);
+
         if (string.IsNullOrEmpty(entryListPath))
         {
-            entryListPath = Path.Join(configBaseFolder, "entry_list.ini");
+            entryListPath = Path.Join(_configBaseFolder, "entry_list.ini");
         }
-            
+
         if (string.IsNullOrEmpty(serverCfgPath))
         {
-            serverCfgPath = Path.Join(configBaseFolder, "server_cfg.ini");
+            serverCfgPath = Path.Join(_configBaseFolder, "server_cfg.ini");
         }
         else
         {
-            configBaseFolder = Path.GetDirectoryName(serverCfgPath)!;
+            _configBaseFolder = Path.GetDirectoryName(serverCfgPath)!;
         }
 
         Server = ServerConfiguration.FromFile(serverCfgPath);
         EntryList = EntryList.FromFile(entryListPath);
         ServerVersion = ThisAssembly.AssemblyInformationalVersion;
-            
+
         FullTrackName = string.IsNullOrEmpty(Server.TrackConfig) ? Server.Track : Server.Track + "-" + Server.TrackConfig;
 
-        string extraCfgPath = Path.Join(configBaseFolder, "extra_cfg.yml");
-        if (File.Exists(extraCfgPath))
-        {
-            Extra = ACExtraConfiguration.FromFile(extraCfgPath, loader);
-        }
-        else
-        {
-            Extra = new ACExtraConfiguration();
-            Extra.ToFile(extraCfgPath);
-        }
-
-        if (Regex.IsMatch(Server.Name, @"x:\w+$"))
-        {
-            const string errorMsg =
-                "Server details are configured via ID in server name. This interferes with native AssettoServer server details. More info: https://github.com/compujuckel/AssettoServer/wiki/Common-configuration-errors#wrong-server-details";
-            if (Extra.IgnoreConfigurationErrors.WrongServerDetails)
-            {
-                Log.Warning(errorMsg);
-            }
-            else
-            {
-                throw new ConfigurationException(errorMsg);
-            }
-        }
-
-        if (Extra.RainTrackGripReductionPercent is < 0 or > 0.5)
-        {
-            throw new ConfigurationException("RainTrackGripReductionPercent must be in the range 0..0.5");
-        }
-        if (Extra.AiParams.MaxSpeedVariationPercent is < 0 or > 1)
-        {
-            throw new ConfigurationException("MaxSpeedVariationPercent must be in the range 0..1");
-        }
-        if (Extra.AiParams.HourlyTrafficDensity != null && Extra.AiParams.HourlyTrafficDensity.Count != 24)
-        {
-            throw new ConfigurationException("HourlyTrafficDensity must have exactly 24 entries");
-        }
-
-        if (Extra.EnableServerDetails)
-        {
-            string cmContentPath = Path.Join(configBaseFolder, "cm_content/content.json");
-            // Only load if the file already exists, otherwise this will fail if the content directory does not exist
-            if (File.Exists(cmContentPath))
-            {
-                var cmContent = JsonConvert.DeserializeObject<CMContentConfiguration>(File.ReadAllText(cmContentPath));
-                File.WriteAllText(cmContentPath, JsonConvert.SerializeObject(cmContent, Formatting.Indented));
-                ContentConfiguration = cmContent;
-            }
-        }
-
-        string welcomeMessagePath = string.IsNullOrEmpty(preset) ? Server.WelcomeMessagePath : Path.Join(configBaseFolder, Server.WelcomeMessagePath);
+        string welcomeMessagePath = string.IsNullOrEmpty(preset) ? Server.WelcomeMessagePath : Path.Join(_configBaseFolder, Server.WelcomeMessagePath);
         if (File.Exists(welcomeMessagePath))
         {
             WelcomeMessage = File.ReadAllText(welcomeMessagePath);
@@ -122,7 +75,7 @@ public class ACServerConfiguration
             Log.Warning("Welcome message not found at {Path}", Path.GetFullPath(welcomeMessagePath));
         }
 
-        string cspExtraOptionsPath = Path.Join(configBaseFolder, "csp_extra_options.ini"); 
+        string cspExtraOptionsPath = Path.Join(_configBaseFolder, "csp_extra_options.ini"); 
         if (File.Exists(cspExtraOptionsPath))
         {
             CSPExtraOptions = File.ReadAllText(cspExtraOptionsPath);
@@ -149,6 +102,60 @@ public class ACServerConfiguration
         }
             
         Sessions = sessions;
+
+        LoadExtraConfig();
+    }
+
+    public void LoadExtraConfig() {
+
+        string extraCfgPath = Path.Join(_configBaseFolder, "extra_cfg.yml");
+        if (File.Exists(extraCfgPath))
+        {
+            Extra = ACExtraConfiguration.FromFile(extraCfgPath);
+        }
+        else
+        {
+            Extra = new ACExtraConfiguration();
+            Extra.ToFile(extraCfgPath);
+        }
+
+        if (Regex.IsMatch(Server.Name, @"x:\w+$"))
+        {
+            const string errorMsg =
+                "Server details are configured via ID in server name. This interferes with native AssettoServer server details. More info: https://github.com/compujuckel/AssettoServer/wiki/Common-configuration-errors#wrong-server-details";
+            if (Extra.IgnoreConfigurationErrors.WrongServerDetails)
+            {
+                Log.Warning(errorMsg);
+            }
+            else
+            {
+                throw new ConfigurationException(errorMsg);
+            }
+        }
+
+        if (Extra.RainTrackGripReductionPercent is < 0 or > 0.5)
+        {
+            throw new ConfigurationException("RainTrackGripReductionPercent must be in the range 0..0.5");
+        }
+        
+        if (Extra.AiParams.MaxSpeedVariationPercent is < 0 or > 1)
+        {
+            throw new ConfigurationException("MaxSpeedVariationPercent must be in the range 0..1");
+        }
+        
+        if (Extra.AiParams.HourlyTrafficDensity != null && Extra.AiParams.HourlyTrafficDensity.Count != 24)
+        {
+            throw new ConfigurationException("HourlyTrafficDensity must have exactly 24 entries");
+        }
+
+        if (Extra.EnableServerDetails)
+        {
+            string cmContentPath = Path.Join(_configBaseFolder, "cm_content/content.json");
+            if (File.Exists(cmContentPath))
+            {
+                ContentConfiguration = JsonConvert.DeserializeObject<CMContentConfiguration>(File.ReadAllText(cmContentPath));
+            }
+        }
     }
 
     private (PropertyInfo? Property, object Parent) GetNestedProperty(string key)

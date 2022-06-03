@@ -48,22 +48,41 @@ namespace AssettoServer.Network.Packets
         }
 
         public void WriteASCIIString(string? str, bool bigLength = false)
-            => WriteString(str, Encoding.ASCII, bigLength);
+            => WriteString(str, Encoding.ASCII, bigLength ? 2 : 1);
 
         public void WriteUTF32String(string? str, bool bigLength = false)
-            => WriteString(str, Encoding.UTF32, bigLength);
+            => WriteString(str, Encoding.UTF32, bigLength ? 2: 1);
 
-        public void WriteString(string? str, Encoding encoding, bool bigLength = false)
+        public void WriteString(string? str, Encoding encoding, int length = 1)
         {
             str ??= string.Empty;
 
-            if (bigLength)
-                Write((ushort)str.Length);
-            else
+            if (length == 1)
                 Write((byte)str.Length);
+            else if (length == 2)
+                Write((ushort)str.Length);
+            else if (length == 4)
+                Write((uint)str.Length);
+            else
+                throw new ArgumentOutOfRangeException(nameof(length));
 
             int bytesWritten = encoding.GetBytes(str, Buffer.Slice(_writePosition).Span);
             _writePosition += bytesWritten;
+        }
+
+        public void WriteStringFixed(string? str, Encoding encoding, int capacity, bool pad = true)
+        {
+            str ??= string.Empty;
+
+            int bytesWritten = encoding.GetBytes(str, Buffer.Slice(_writePosition, capacity).Span);
+            _writePosition += bytesWritten;
+
+            if (pad)
+            {
+                int remaining = capacity - bytesWritten;
+                Buffer.Slice(_writePosition, remaining).Span.Fill(0);
+                _writePosition += remaining;
+            }
         }
 
         public void Write<T>(T value) where T : struct

@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using AssettoServer.Network.Packets.Outgoing;
+using Serilog;
 
 namespace AssettoServer.Server.Configuration;
 
@@ -10,6 +12,8 @@ namespace AssettoServer.Server.Configuration;
 public class CSPServerExtraOptions
 {
     private static readonly string CspConfigSeparator = RepeatString("\t", 32) + "$CSP0:";
+
+    private bool _hasShownMessageLengthWarning = false;
 
     public string WelcomeMessage
     {
@@ -34,6 +38,16 @@ public class CSPServerExtraOptions
 
     private string _welcomeMessage = "";
     private string _extraOptions = "";
+
+    public CSPServerExtraOptions(ACServerConfiguration configuration) : this(configuration.WelcomeMessage)
+    {
+        WelcomeMessage += LegalNotice.WelcomeMessage;
+        if (configuration.Extra.EnableCustomUpdate)
+        {
+            ExtraOptions += "\r\n" + $"[EXTRA_DATA]\r\nCUSTOM_UPDATE_FORMAT = '{CSPPositionUpdate.CustomUpdateFormat}'";
+        }
+        ExtraOptions += "\r\n" + configuration.CSPExtraOptions;
+    }
 
     public CSPServerExtraOptions(string welcomeMessage)
     {
@@ -61,6 +75,12 @@ public class CSPServerExtraOptions
     private void Encode()
     {
         EncodedWelcomeMessage = BuildWelcomeMessage();
+        
+        if (!_hasShownMessageLengthWarning && EncodedWelcomeMessage.Length > 2039)
+        {
+            _hasShownMessageLengthWarning = true;
+            Log.Warning("Long welcome message detected. This will lead to crashes on CSP versions older than 0.1.77");
+        }
     }
     
     private string BuildWelcomeMessage() {

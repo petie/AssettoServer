@@ -27,6 +27,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastLaneUtils", "FastLaneUt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafetyRatingPlugin", "SafetyRatingPlugin\SafetyRatingPlugin.csproj", "{A3BC3C2B-C346-47E7-B6C4-11B5314AF062}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDilationPlugin", "TimeDilationPlugin\TimeDilationPlugin.csproj", "{F479976E-7BB0-49EB-A97E-5389C0601D91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoModerationPlugin", "AutoModerationPlugin\AutoModerationPlugin.csproj", "{59C320A4-11D8-4BAE-81F1-226D012F5484}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssettoServer.Hub.Contracts", "AssettoServer.Hub.Contracts\AssettoServer.Hub.Contracts.csproj", "{C894D6B1-DA6B-4E88-B3BA-3490163F59D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +83,18 @@ Global
 		{12A71A2F-CB26-4452-8B24-D3DA2A32466E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12A71A2F-CB26-4452-8B24-D3DA2A32466E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12A71A2F-CB26-4452-8B24-D3DA2A32466E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F479976E-7BB0-49EB-A97E-5389C0601D91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F479976E-7BB0-49EB-A97E-5389C0601D91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F479976E-7BB0-49EB-A97E-5389C0601D91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F479976E-7BB0-49EB-A97E-5389C0601D91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59C320A4-11D8-4BAE-81F1-226D012F5484}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59C320A4-11D8-4BAE-81F1-226D012F5484}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59C320A4-11D8-4BAE-81F1-226D012F5484}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59C320A4-11D8-4BAE-81F1-226D012F5484}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C894D6B1-DA6B-4E88-B3BA-3490163F59D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C894D6B1-DA6B-4E88-B3BA-3490163F59D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C894D6B1-DA6B-4E88-B3BA-3490163F59D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C894D6B1-DA6B-4E88-B3BA-3490163F59D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A3BC3C2B-C346-47E7-B6C4-11B5314AF062}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A3BC3C2B-C346-47E7-B6C4-11B5314AF062}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3BC3C2B-C346-47E7-B6C4-11B5314AF062}.Release|Any CPU.ActiveCfg = Release|Any CPU

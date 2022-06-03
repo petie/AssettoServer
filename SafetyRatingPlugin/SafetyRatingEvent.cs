@@ -8,14 +8,14 @@ namespace SafetyRatingPlugin
 {
     public class SafetyRatingEvent
     {
-        public SafetyRatingEvent(SafetyEventType type, int time)
+        public SafetyRatingEvent(SafetyEventType type, long time)
         {
             Type = type;
             Time = time;
         }
 
         public SafetyEventType Type { get; set; }
-        public int Time { get; set; }
+        public long Time { get; set; }
     }
 
     public enum SafetyEventType

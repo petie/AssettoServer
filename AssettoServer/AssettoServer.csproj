@@ -3,15 +3,19 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;linux-arm64</RuntimeIdentifiers>
     <LangVersion>10</LangVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <DebugType>embedded</DebugType>
     <Nullable>enable</Nullable>
     <PublishDir Condition="'$(RuntimeIdentifier)' == 'linux-x64'">..\out-linux-x64\</PublishDir>
-    <PublishDir Condition="'$(RuntimeIdentifier)' != 'linux-x64'">..\out-win-x64\</PublishDir>
+    <PublishDir Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">..\out-linux-arm64\</PublishDir>
+    <PublishDir Condition="'$(RuntimeIdentifier)' == 'win-x64'">..\out-win-x64\</PublishDir>
     <NoWarn>ERP022,EPC12</NoWarn>
+    <Platforms>AnyCPU</Platforms>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <DefineConstants Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">DISABLE_STEAM</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +23,8 @@
     <PackageReference Include="App.Metrics.AspNetCore.All" Version="4.3.0" />
     <PackageReference Include="App.Metrics.Prometheus" Version="4.3.0" />
     <PackageReference Include="App.Metrics.Reporting.Console" Version="4.3.0" />
+    <PackageReference Include="Autofac" Version="6.3.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.2.0" />
     <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
     <PackageReference Include="CsvHelper" Version="27.1.1" />
     <PackageReference Include="CXuesong.Luaon.Json" Version="0.2.1" />
@@ -41,6 +47,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NodaTime" Version="3.0.10" />
     <PackageReference Include="Polly" Version="7.2.2" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.45.0" />
+    <PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
+    <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.0.152" />
     <PackageReference Include="Qmmands" Version="4.0.0" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01308" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
@@ -51,6 +60,7 @@
     <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="7.1.0" />
     <PackageReference Include="SerilogTimings" Version="2.3.1-dev-00010" />
     <PackageReference Include="compujuckel.Supercluster.KDTree" Version="1.0.6" />
+    <PackageReference Include="SunCalcNet" Version="1.2.0" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.244" PrivateAssets="all" Condition="!Exists('packages.config')" />
   </ItemGroup>
@@ -68,8 +78,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>libnanosockets.so</TargetPath>
     </ContentWithTargetPath>
+    <Reference Include="Facepunch.Steamworks.Posix">
+      <HintPath>..\Redist\Facepunch.Steamworks.Posix.dll</HintPath>
+    </Reference>
   </ItemGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' != 'linux-x64'">
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
+    <ContentWithTargetPath Include="Redist/libnanosockets_arm64.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>libnanosockets.so</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <ContentWithTargetPath Include="Redist/steam_api64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>steam_api64.dll</TargetPath>
@@ -78,15 +97,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>nanosockets.dll</TargetPath>
     </ContentWithTargetPath>
+    <Reference Include="Facepunch.Steamworks.Win64">
+      <HintPath>..\Redist\Facepunch.Steamworks.Win64.dll</HintPath>
+    </Reference>
   </ItemGroup>
   
   <ItemGroup>
-    <Reference Include="Facepunch.Steamworks.Posix" Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-      <HintPath>..\Redist\Facepunch.Steamworks.Posix.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Steamworks.Win64" Condition="'$(RuntimeIdentifier)' != 'linux-x64'">
-      <HintPath>..\Redist\Facepunch.Steamworks.Win64.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\AssettoServer.Hub.Contracts\AssettoServer.Hub.Contracts.csproj" />
     <!--<Reference Include="Supercluster.KDTree, Version=1.0.3.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\RiderProjects\Supercluster.KDTree\KDTree\bin\Debug\net6.0\Supercluster.KDTree.dll</HintPath>
     </Reference>-->

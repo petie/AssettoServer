@@ -10,10 +10,16 @@ namespace SafetyRatingPlugin
 {
     public class SafetyRatingCommandModule : ACModuleBase
     {
+        private SafetyRating _rating;
+
+        public SafetyRatingCommandModule(SafetyRating rating)
+        {
+            _rating = rating;
+        }
         [Command("rating")]
         public void Rating(string userName)
         {
-            SafetyRatingPlugin.Instance?.GetRatings(userName, Context.Server.CurrentTime);
+            _rating.GetRatings(userName);
         }
     }
 }

@@ -19,12 +19,12 @@ namespace SafetyRatingPlugin
             Events = new List<SafetyRatingEvent>();
         }
 
-        public void AddEvent(SafetyEventType type, int time)
+        public void AddEvent(SafetyEventType type, long time)
         {
             Events.Add(new SafetyRatingEvent(type, time));
         }
 
-        public int Calculate(int envMulti, int trafficMulti, int playerMulti, int currentTime, int countTime)
+        public int Calculate(int envMulti, int trafficMulti, int playerMulti, long currentTime, int countTime)
         {
             Events.RemoveAll(e =>
             {

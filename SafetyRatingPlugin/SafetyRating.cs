@@ -11,32 +11,38 @@ namespace SafetyRatingPlugin
     {
         private readonly ACServer _server;
         private readonly SafetyRatingConfiguration _configuration;
+        private readonly SessionManager sessionManager;
         private static Dictionary<string, PlayerSafetyRating> _ratings = new Dictionary<string, PlayerSafetyRating>();
 
-        internal string GetRatings(string userName, int currentTime)
+        internal string GetRatings(string userName)
         {
             if (userName == null)
             {
                 StringBuilder sb = new StringBuilder();
                 _ratings.Values.OrderBy(x => x.Name).ToList().ForEach(x =>
                 {
-                    sb.Append($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, currentTime, _configuration.Duration)}\t{x.Name}");
+                    sb.Append($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{x.Name}");
                 });
                 return sb.ToString();
             } else
             {
                 var rating = _ratings[userName];
-                return $"{rating.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, currentTime, _configuration.Duration)}\t{rating.Name}";
+                return $"{rating.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{rating.Name}";
             }
         }
 
-        public SafetyRating(ACServer server, SafetyRatingConfiguration configuration)
+        public SafetyRating(ACServer server, SafetyRatingConfiguration configuration, EntryCarManager carManager, SessionManager sessionManager)
         {
             _server = server;
             _configuration = configuration;
-            _server.ClientCollision += ClientCollided;
-            _server.ClientDisconnected += ClientDisconnected;
-            _server.ClientChecksumPassed += ClientConnected;
+            this.sessionManager = sessionManager;
+            carManager.ClientConnecting += (client, _) =>
+            {
+                client.Collision += ClientCollided;
+                client.Disconnecting += ClientDisconnected;
+                client.ChecksumPassed += ClientConnected;
+            };
+
         }
 
         private void ClientConnected(AssettoServer.Network.Tcp.ACTcpClient sender, EventArgs args)
@@ -71,15 +77,15 @@ namespace SafetyRatingPlugin
 
                 if (args.TargetCar == null)
                 {
-                    rating.AddEvent(SafetyEventType.Environment, sender.Server.CurrentTime);
+                    rating.AddEvent(SafetyEventType.Environment, sessionManager.ServerTimeMilliseconds);
                 }
                 else if (args.TargetCar != null && args.TargetCar.AiControlled)
                 {
-                    rating.AddEvent(SafetyEventType.Traffic, sender.Server.CurrentTime);
+                    rating.AddEvent(SafetyEventType.Traffic, sessionManager.ServerTimeMilliseconds);
                 }
                 else
                 {
-                    rating.AddEvent(SafetyEventType.Player, sender.Server.CurrentTime);
+                    rating.AddEvent(SafetyEventType.Player, sessionManager.ServerTimeMilliseconds);
                 }
 
             }
