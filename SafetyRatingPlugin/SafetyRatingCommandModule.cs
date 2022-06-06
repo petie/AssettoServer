@@ -19,7 +19,13 @@ namespace SafetyRatingPlugin
         [Command("rating")]
         public void Rating(string userName)
         {
-            _rating.GetRatings(userName);
+            Reply(_rating.GetRatings(userName));
+        }
+
+        [Command("ratings")]
+        public void Ratings()
+        {
+            Reply(_rating.GetRatings());
         }
     }
 }

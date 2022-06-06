@@ -1,4 +1,7 @@
 ﻿using AssettoServer.Server;
+using AssettoServer.Server.Plugin;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,33 +10,35 @@ using System.Threading.Tasks;
 
 namespace SafetyRatingPlugin
 {
-    public class SafetyRating
+    public class SafetyRating : BackgroundService, IAssettoServerAutostart
     {
-        private readonly ACServer _server;
         private readonly SafetyRatingConfiguration _configuration;
         private readonly SessionManager sessionManager;
         private static Dictionary<string, PlayerSafetyRating> _ratings = new Dictionary<string, PlayerSafetyRating>();
 
         internal string GetRatings(string userName)
         {
-            if (userName == null)
-            {
-                StringBuilder sb = new StringBuilder();
-                _ratings.Values.OrderBy(x => x.Name).ToList().ForEach(x =>
-                {
-                    sb.Append($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{x.Name}");
-                });
-                return sb.ToString();
+            if (_ratings.TryGetValue(userName, out var rating))
+            { 
+                return $"{rating.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{rating.Name}";
             } else
             {
-                var rating = _ratings[userName];
-                return $"{rating.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{rating.Name}";
+                return $"No data for {userName}";
             }
         }
 
-        public SafetyRating(ACServer server, SafetyRatingConfiguration configuration, EntryCarManager carManager, SessionManager sessionManager)
+        internal string GetRatings()
         {
-            _server = server;
+            StringBuilder sb = new StringBuilder();
+            _ratings.Values.OrderBy(x => x.Name).ToList().ForEach(x =>
+            {
+                sb.Append($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{x.Name}\n");
+            });
+            return sb.ToString();
+        }
+
+        public SafetyRating(SafetyRatingConfiguration configuration, EntryCarManager carManager, SessionManager sessionManager)
+        {
             _configuration = configuration;
             this.sessionManager = sessionManager;
             carManager.ClientConnecting += (client, _) =>
@@ -47,14 +52,15 @@ namespace SafetyRatingPlugin
 
         private void ClientConnected(AssettoServer.Network.Tcp.ACTcpClient sender, EventArgs args)
         {
-            if (sender.Name != null && !sender.EntryCar.AiControlled)
+            Log.Information($"Safety rating initialized for {sender.Name}");
+            if (sender.Name != null)
             {
-                var rating = _ratings[sender.Name];
-                if (rating == null)
+                if (!_ratings.TryGetValue(sender.Name, out var rating))
                 {
                     rating = new PlayerSafetyRating(sender.Name, _configuration.BaseValue);
                     _ratings[sender.Name] = rating;
                 }
+                Log.Debug($"Ratings size after connect {_ratings.Count}");
             }
         }
 
@@ -73,6 +79,7 @@ namespace SafetyRatingPlugin
         {
             if (sender != null && sender.Name != null)
             {
+                Log.Debug($"Ratings size on collition {_ratings.Count}");
                 var rating = _ratings[sender.Name];
 
                 if (args.TargetCar == null)
@@ -89,6 +96,12 @@ namespace SafetyRatingPlugin
                 }
 
             }
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            Log.Debug("Safety rating plugin autostart called");
+            return Task.CompletedTask;
         }
     }
 }
