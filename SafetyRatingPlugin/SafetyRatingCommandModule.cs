@@ -25,7 +25,10 @@ namespace SafetyRatingPlugin
         [Command("ratings")]
         public void Ratings()
         {
-            Reply(_rating.GetRatings());
+            foreach (var rating in _rating.GetRatings())
+            {
+                Reply(rating);
+            }
         }
     }
 }

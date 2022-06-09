@@ -27,14 +27,14 @@ namespace SafetyRatingPlugin
             }
         }
 
-        internal string GetRatings()
+        internal List<string> GetRatings()
         {
-            StringBuilder sb = new StringBuilder();
+            List<string> result = new List<string>();
             _ratings.Values.OrderBy(x => x.Name).ToList().ForEach(x =>
             {
-                sb.Append($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{x.Name}\n");
+                result.Add($"{x.Calculate(_configuration.EnvironmentMultiplier, _configuration.EnvironmentMultiplier, _configuration.PlayerMultiplier, sessionManager.ServerTimeMilliseconds, _configuration.Duration)}\t{x.Name}\n");
             });
-            return sb.ToString();
+            return result;
         }
 
         public SafetyRating(SafetyRatingConfiguration configuration, EntryCarManager carManager, SessionManager sessionManager)
@@ -52,7 +52,6 @@ namespace SafetyRatingPlugin
 
         private void ClientConnected(AssettoServer.Network.Tcp.ACTcpClient sender, EventArgs args)
         {
-            Log.Information($"Safety rating initialized for {sender.Name}");
             if (sender.Name != null)
             {
                 if (!_ratings.TryGetValue(sender.Name, out var rating))
@@ -60,7 +59,6 @@ namespace SafetyRatingPlugin
                     rating = new PlayerSafetyRating(sender.Name, _configuration.BaseValue);
                     _ratings[sender.Name] = rating;
                 }
-                Log.Debug($"Ratings size after connect {_ratings.Count}");
             }
         }
 
@@ -79,7 +77,6 @@ namespace SafetyRatingPlugin
         {
             if (sender != null && sender.Name != null)
             {
-                Log.Debug($"Ratings size on collition {_ratings.Count}");
                 var rating = _ratings[sender.Name];
 
                 if (args.TargetCar == null)
